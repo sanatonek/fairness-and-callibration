@@ -1,6 +1,6 @@
 # Fairness and Calibration
 
-##Datasets used:
+## Datasets used:
 
 - Heart Disease Data Set
   https://archive.ics.uci.edu/ml/datasets/Heart+Disease
