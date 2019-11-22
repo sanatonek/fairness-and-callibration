@@ -11,10 +11,12 @@ def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
 
     for t in range(epochs):
         for i_batch, sample_batched in enumerate(train_loader):
+            # print(sample_batched[0].shape)
             x, y, a = sample_batched[0], sample_batched[1].squeeze(), sample_batched[2]
 
             # Forward pass: Compute predicted y by passing x to the model
             y_pred = model(x)
+            # print('Prediction size: ', y_pred.shape)
 
             # print('y_pred.dims: {}'.format(y_pred.shape))
             # print('y.dims: {}'.format(y.shape))
