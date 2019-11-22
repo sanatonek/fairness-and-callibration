@@ -27,9 +27,7 @@ def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
             correct += (predicted == y).sum().item()
 
             if t % 100 == 50:
-                print(t, loss.item())
-                print('Accuracy of the network: %d %%' % (
-                        100 * correct / total))
+                print('Epoch %d ==> Accuracy: %.2f \t Loss: %.3f' %(t, 100 * correct / total, loss.item()))
 
             # Zero gradients, perform a backward pass, and update the weights.
             optimizer.zero_grad()
