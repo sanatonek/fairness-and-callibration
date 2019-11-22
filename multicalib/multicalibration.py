@@ -3,11 +3,14 @@ import numpy as np
 
 def calibrate(data, lables, predictions, setsitive_features, alpha, lmbda):
     calibrated_predictions = predictions.copy()
+    predictions = predictions[:,0] # Why!
+    lables = lables[:, 0]
     for sensitive_feature in setsitive_features:
         # Find the two subset of the sensitive feature
-        sensitive_set = [i for i,x in data if data[sensitive_feature]==1]
-        sensitive_set_not = range(len(data)) - sensitive_set
-        v_range = range(0,1,lmbda)
+        sensitive_set = [i for i in range(len(data)) if data[i,sensitive_feature]==1]
+        sensitive_set_not = list(set(range(len(data))) - set(sensitive_set))
+        print(len(sensitive_set))
+        v_range = list(range(0,1,lmbda))
 
         for S in [sensitive_set, sensitive_set_not]:
             for v in v_range:
