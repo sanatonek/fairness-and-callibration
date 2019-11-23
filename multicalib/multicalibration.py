@@ -87,3 +87,38 @@ def normalize(x):
         return x/min(x)
     else:
         return (x-min(x))/(max(x)-min(x))
+
+def data_matches_features(data, selected_sensitives, all_sensitives):
+    is_sensitive_required = dict()
+    for sensitive_feature in all_sensitives:
+        is_sensitive_required[sensitive_feature] = 0
+    for required_sensitive_feature in selected_sensitives:
+        is_sensitive_required[required_sensitive_feature] = 1
+    
+    for i in range(len(data)):
+        if i in is_sensitive_required:
+            if data[i] != is_sensitive_required[i]:
+                return False
+    
+    return True
+
+def all_subsets(data,lables, predictions, sensitive_features):
+    #all subests hold the indices of sensitive features, each set shows the members with what values for sensitive features are present 
+    all_subsets =[]
+    x = len(sensitive_features)
+    for i in range(1 << x):
+        current_subset = []
+        for j in range(x):
+            if((i>>j)&1):
+                current_subset.append(j) 
+        all_subsets.append(current_subset) 
+    targes_sets=[]
+    for i in range(1,len(all_subsets)):
+        required_sensitive_features = all_subsets[i]
+        #targes_sets[i] = [i for i in range(len(data)) if data[i, sensitive_feature] == 1]
+        data_indices_matching_features = [idx for idx in range(len(data)) if 
+            data_matches_features(data[idx, :], required_sensitive_features, sensitive_features)]
+
+
+
+    return all_subsets
