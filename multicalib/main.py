@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 
 from multicalib.models import IncomeDataset, NNetPredictor
 from multicalib.utils import train_predictor
-from multicalib.multicalibration import calibrate
+from multicalib.multicalibration import calibrate,multi_calibrate
 
 
 def main(data, features=[0,1]):
@@ -24,7 +24,7 @@ def main(data, features=[0,1]):
     predictions = torch.FloatTensor(predictions.shape).uniform_(0,1)
 
     # Calibrate output
-    calibrate(data=x.numpy(), lables=y.numpy(), predictions=predictions.detach().numpy(), setsitive_features=features, alpha=0.01, lmbda=5)
+    multi_calibrate(data=x.numpy(), lables=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.01, lmbda=5)
 
 
 if __name__=='__main__':
