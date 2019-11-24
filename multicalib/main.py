@@ -2,10 +2,11 @@ import sys
 import torch
 import argparse
 import numpy as np
+import pandas as pd
 from torch.utils.data import DataLoader
 sys.path.append('..')
 
-from multicalib.models import IncomeDataset, NNetPredictor
+from multicalib.models import IncomeDataset, CreditDataset, NNetPredictor
 from multicalib.utils import train_predictor
 from multicalib.multicalibration import calibrate,multi_calibrate
 
@@ -17,10 +18,16 @@ def main(args, features=[0,1]):
         trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
         testset = IncomeDataset(file='adult_test.npz', root_dir=args.path+'data/')
         testloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
+    elif (args.data == 'credit'):
+        trainset = CreditDataset(file='credit_card_default_train.xls', root_dir=args.path+'data/')
+        trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
+        testset = CreditDataset(file='credit_card_default_test.xls', root_dir=args.path+'data/')
+        testloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
+
 
     # Train a preictor model
     if (args.mode == 'train'):
-        model = NNetPredictor()
+        model = NNetPredictor(trainset.__dim__())
         train_predictor(model, trainloader, epochs=args.epochs)
         torch.save(model, args.path+'models/checkpoint_'+args.data+'.mdl')
         torch.save(model.state_dict(), args.path+'models/checkpoint_'+args.data+'.pth')
