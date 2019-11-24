@@ -29,7 +29,7 @@ class IncomeDataset(Dataset):
         print('Income dataset (a) dims: {}'.format(self.a.shape))
 
     def __len__(self):
-        return len(self.all_data)
+        return len(self.x)
 
     def __getitem__(self, idx):
         # if torch.is_tensor(idx):
