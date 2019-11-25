@@ -17,15 +17,15 @@
 
 ## Running the code
 
-To execute the training sequence, run the following command from the repository root:
+To first train a model, run the following command from the repository root:
 ```
-python main.py --data=<dataset> --mode=<train> --epochs=<no_of_epochs> --batch_size=<batch_size>
+python -m multicalib.main --data=<dataset> --train --epochs=<no_of_epochs> --batch_size=<batch_size>
 ```
 
 For calibration, the model will attempt to load the model for the chosen dataset if it already exists. 
 The following command will run _only_ the calibration/multicalibration sequence on the data
 ```
-python main.py --data=<dataset> --mode=<calib>
+python -m  multicalib.main --data=<dataset> --mode=<calib>
 ```
   
   

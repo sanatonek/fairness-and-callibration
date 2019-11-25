@@ -3,17 +3,15 @@ from sklearn import preprocessing
 
 
 def calibrate(data, lables, predictions, sensitive_features, alpha, lmbda):
-    predictions = predictions[:,0] # Why!
-    lables = lables[:, 0]
     calibrated_predictions = predictions.copy()
     print('Total number of samples to begin with: ', len(predictions))
     print('AE pre-calibration: ', abs(np.mean(lables)-np.mean(predictions)))
     v_range = np.arange(0,1,1./lmbda)
     change = 1
     while change>0:
-        print('Only %d sets changed')
+        print('Only %d sets changed'%change)
         change=0
-        for sensitive_feature in setsitive_features:
+        for sensitive_feature in sensitive_features:
             # Find the two subset of the sensitive feature
             sensitive_set = [i for i in range(len(data)) if data[i, sensitive_feature] == 1]
             sensitive_set_not = list(set(range(len(data))) - set(sensitive_set))
@@ -43,8 +41,6 @@ def calibrate(data, lables, predictions, sensitive_features, alpha, lmbda):
 
 
 def multi_calibrate(data, lables, predictions, sensitive_features, alpha, lmbda):
-    predictions = predictions[:,0] # Why!
-    lables = lables[:, 0]
     calibrated_predictions = predictions.copy()
     #print('Total number of samples to begin with: ', len(predictions))
     target_sets = all_subsets(data,sensitive_features)

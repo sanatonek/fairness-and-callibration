@@ -1,6 +1,7 @@
 import sys
 import torch
 import argparse
+import os
 import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
@@ -9,7 +10,7 @@ sys.path.append('..')
 from train import Trainer
 from multicalib.models import IncomeDataset, CreditDataset, NNetPredictor
 from multicalib.utils import train_predictor
-from multicalib.multicalibration import calibrate,multi_calibrate
+from multicalib.multicalibration import calibrate, multi_calibrate
 
 def main(args, features=[0,1]):
     # Load the datasets
@@ -22,7 +23,10 @@ def main(args, features=[0,1]):
     predictions = torch.FloatTensor(predictions.shape).uniform_(0,1)
 
     # Calibrate output
-    multi_calibrate(data=x.numpy(), lables=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.01, lmbda=5)
+    if args.mode == 'calib':
+        calibrate(data=x.numpy(), lables=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.1, lmbda=5)
+    elif args.mode =='multicalib':
+        multi_calibrate(data=x.numpy(), lables=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.1, lmbda=5)
 
 
 if __name__=='__main__':
@@ -30,11 +34,11 @@ if __name__=='__main__':
     parser.add_argument('--data', type=str, default='income', help='Dataset to use for the experiment')
     parser.add_argument('--features', type=int, default=1, help='List of sensitive attributes')
     parser.add_argument('--batch_size', type=int, default=100, help='Training batch size')
-    parser.add_argument('--epochs', type=int, default=100, help='Training epochs')
-    parser.add_argument('--mode', type=str, default='calib', help='["train" or "calib"]')
+    parser.add_argument('--epochs', type=int, default=80, help='Training epochs')
+    parser.add_argument('--train',  action='store_true', help='Train the predictor model first')
+    parser.add_argument('--mode', type=str, default='calib', help='["calib", "multicalib"]')
     parser.add_argument('--path', type=str, default='./', help='Root directory path')
 
     args = parser.parse_args()
-    print(args)
     main(args)
 
