@@ -6,39 +6,19 @@ import pandas as pd
 from torch.utils.data import DataLoader
 sys.path.append('..')
 
+from train import Trainer
 from multicalib.models import IncomeDataset, CreditDataset, NNetPredictor
 from multicalib.utils import train_predictor
 from multicalib.multicalibration import calibrate,multi_calibrate
 
-
 def main(args, features=[0,1]):
     # Load the datasets
-    if (args.data == 'income'):
-        trainset = IncomeDataset(file='adult_train.npz', root_dir=args.path+'data/')
-        trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
-        testset = IncomeDataset(file='adult_test.npz', root_dir=args.path+'data/')
-        testloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
-    elif (args.data == 'credit'):
-        trainset = CreditDataset(file='credit_card_default_train.xls', root_dir=args.path+'data/')
-        trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
-        testset = CreditDataset(file='credit_card_default_test.xls', root_dir=args.path+'data/')
-        testloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
+    trn = Trainer(args)
 
-
-    # Train a preictor model
-    if (args.mode == 'train'):
-        model = NNetPredictor(trainset.__dim__())
-        train_predictor(model, trainloader, epochs=args.epochs)
-        torch.save(model, args.path+'models/checkpoint_'+args.data+'.mdl')
-        torch.save(model.state_dict(), args.path+'models/checkpoint_'+args.data+'.pth')
-    else:
-        model = torch.load(args.path+'models/checkpoint_'+args.data+'.mdl')
-        model.load_state_dict(torch.load(args.path+'models/checkpoint_'+args.data+'.pth'))
-
-    x = torch.stack([sample[0] for sample in list(trainset)])[:100]
-    y = torch.stack([sample[1] for sample in list(trainset)])[:100]
+    x = torch.stack([sample[0] for sample in list(trn.trainset)])[:100]
+    y = torch.stack([sample[1] for sample in list(trn.trainset)])[:100]
     print('Data size: ', x.shape)
-    predictions = model(x)
+    predictions = trn.model(x)
     predictions = torch.FloatTensor(predictions.shape).uniform_(0,1)
 
     # Calibrate output
