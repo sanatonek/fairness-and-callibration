@@ -11,9 +11,9 @@ def calibrate(data, lables, predictions, sensitive_features, alpha, lmbda):
     v_range = np.arange(0,1,1./lmbda)
     change = 1
     while change>0:
-        print('Only %d sets changed')
+        print('Only %d sets changed'%change)
         change=0
-        for sensitive_feature in setsitive_features:
+        for sensitive_feature in sensitive_features:
             # Find the two subset of the sensitive feature
             sensitive_set = [i for i in range(len(data)) if data[i, sensitive_feature] == 1]
             sensitive_set_not = list(set(range(len(data))) - set(sensitive_set))
