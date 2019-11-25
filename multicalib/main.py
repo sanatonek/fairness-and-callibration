@@ -7,7 +7,6 @@ import pandas as pd
 from torch.utils.data import DataLoader
 sys.path.append('..')
 
-from train import Trainer
 from multicalib.models import IncomeDataset, CreditDataset, NNetPredictor
 from multicalib.utils import train_predictor
 from multicalib.multicalibration import calibrate
@@ -21,13 +20,9 @@ def main(args):
     # Load the datasets
     print('Loading %s dataset'%args.data)
     if args.data == 'income':
-        trainset = IncomeDataset(file='adult_train.npz', root_dir=args.path+'data/')
-        trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
         testset = IncomeDataset(file='adult_test.npz', root_dir=args.path+'data/')
         testloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
     elif args.data == 'credit':
-        trainset = CreditDataset(file='credit_card_default_train.xls', root_dir=args.path+'data/')
-        trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
         testset = CreditDataset(file='credit_card_default_test.xls', root_dir=args.path+'data/')
         testloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
     features = sensitive_features[args.data]

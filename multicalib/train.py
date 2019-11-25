@@ -9,7 +9,7 @@ from multicalib.models import IncomeDataset, CreditDataset, NNetPredictor
 
 sys.path.append('..')
 
-class Trainer:
+def train(args):
     def __init__(self, args):
         self.args = args
         self.model = []
@@ -40,3 +40,11 @@ class Trainer:
         self.trainset = trainset
         self.testset = testset
 
+if __name__=='__main__':
+    parser = argparse.ArgumentParser(description='Use multicalibration to report clibrated results of a model')
+    parser.add_argument('--batch_size', type=int, default=100, help='Training batch size')
+    parser.add_argument('--epochs', type=int, default=80, help='Training epochs')
+    parser.add_argument('--train',  action='store_true', help='Train the predictor model first')
+
+    args = parser.parse_args()
+    main(args)
