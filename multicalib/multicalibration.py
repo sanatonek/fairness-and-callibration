@@ -3,8 +3,6 @@ from sklearn import preprocessing
 
 
 def calibrate(data, lables, predictions, sensitive_features, alpha, lmbda):
-    predictions = predictions[:,0] # Why!
-    lables = lables[:, 0]
     calibrated_predictions = predictions.copy()
     print('Total number of samples to begin with: ', len(predictions))
     print('AE pre-calibration: ', abs(np.mean(lables)-np.mean(predictions)))
@@ -43,8 +41,6 @@ def calibrate(data, lables, predictions, sensitive_features, alpha, lmbda):
 
 
 def multi_calibrate(data, lables, predictions, sensitive_features, alpha, lmbda):
-    predictions = predictions[:,0] # Why!
-    lables = lables[:, 0]
     calibrated_predictions = predictions.copy()
     #print('Total number of samples to begin with: ', len(predictions))
     target_sets = all_subsets(data,sensitive_features)

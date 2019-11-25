@@ -12,7 +12,7 @@ from multicalib.utils import train_predictor
 from multicalib.multicalibration import calibrate, multi_calibrate
 
 
-def main(args, features=[0,1]):
+def main(args, features=[1]):
     # Load the datasets
     print('Loading %s dataset'%args.data)
     if args.data == 'income':
@@ -42,15 +42,13 @@ def main(args, features=[0,1]):
 
     x = torch.stack([sample[0] for sample in list(testset)])
     y = torch.stack([sample[1] for sample in list(testset)])
-    predictions = model(x)
-    print(predictions.shape)
-    # predictions = torch.FloatTensor(predictions.shape).uniform_(0,1)
+    predictions = torch.nn.Sigmoid()(model(x))[:,0]
 
     # Calibrate output
     if args.mode == 'calib':
-        calibrate(data=x.numpy(), lables=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.01, lmbda=5)
+        calibrate(data=x.numpy(), lables=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.1, lmbda=5)
     elif args.mode =='multicalib':
-        multi_calibrate(data=x.numpy(), lables=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.01, lmbda=5)
+        multi_calibrate(data=x.numpy(), lables=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.1, lmbda=5)
 
 
 if __name__=='__main__':
