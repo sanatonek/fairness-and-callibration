@@ -9,10 +9,13 @@ sys.path.append('..')
 
 from multicalib.models import IncomeDataset, CreditDataset, NNetPredictor
 from multicalib.utils import train_predictor
-from multicalib.multicalibration import calibrate, multi_calibrate
+from multicalib.multicalibration import calibrate
+
+# 1:age_u30, 65: race_black, 66: female
+sensitive_features = {'income':[1, 65, 66]}
 
 
-def main(args, features=[1]):
+def main(args):
     # Load the datasets
     print('Loading %s dataset'%args.data)
     if args.data == 'income':
@@ -25,6 +28,7 @@ def main(args, features=[1]):
         trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
         testset = CreditDataset(file='credit_card_default_test.xls', root_dir=args.path+'data/')
         testloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
+    features = sensitive_features[args.data]
 
     # Train a predictor model
     if args.train:
@@ -42,13 +46,13 @@ def main(args, features=[1]):
 
     x = torch.stack([sample[0] for sample in list(testset)])
     y = torch.stack([sample[1] for sample in list(testset)])
-    predictions = torch.nn.Sigmoid()(model(x))[:,0]
+    predictions = torch.nn.Sigmoid()(model(x))[:,1]
 
     # Calibrate output
     if args.mode == 'calib':
-        calibrate(data=x.numpy(), lables=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.1, lmbda=5)
+        calibrate(data=x.numpy(), labels=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.1, lmbda=5)
     elif args.mode =='multicalib':
-        multi_calibrate(data=x.numpy(), lables=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.1, lmbda=5)
+        multi_calibrate(data=x.numpy(), labels=y.numpy(), predictions=predictions.detach().numpy(), sensitive_features=features, alpha=0.1, lmbda=5)
 
 
 if __name__=='__main__':
