@@ -56,16 +56,15 @@ def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            
+
+        if (t%10==0):
+            print('epoch: {}, pred_loss: {:.5f}, eq_odds_loss: {:.5f}, loss: {:.5f}, accuracy: {:.2f}%'.format(t, pred_loss/total, eq_odds_loss/total, running_loss/total, 100*correct/total))
+
         pred_loss = 0
         eq_odds_loss = 0
         running_loss = 0
         total = 0
         correct = 0
-            
-        if (t%10==0):
-            print('epoch: {}, pred_loss: {:.5f}, eq_odds_loss: {:.5f}, loss: {:.5f}, accuracy: {:.2f}%'.format(t, pred_loss/total, eq_odds_loss/total, running_loss/total, 100*correct/total))
-
 
 def expected_accuracy(labels, predictions, regularized_predictions):
     predictions_b = (predictions>0.5).astype(int)
