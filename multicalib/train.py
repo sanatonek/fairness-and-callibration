@@ -27,6 +27,7 @@ def train(args):
     torch.save(model, args.path+'models/checkpoint_'+args.data+'.mdl')
     torch.save(model.state_dict(), args.path+'models/checkpoint_'+args.data+'.pth')
 
+
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Use multicalibration to report clibrated results of a model')
     parser.add_argument('--batch_size', type=int, default=100, help='Training batch size')

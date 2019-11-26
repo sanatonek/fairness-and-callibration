@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn import preprocessing
 
 from multicalib.utils import expected_accuracy, calibration_score
 
@@ -14,7 +13,7 @@ def calibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
         # Find the two subset of the sensitive feature
         sensitive_set = [i for i in range(len(data)) if data[i, sensitive_feature] == 1]
         sensitive_set_not = list(set(range(len(data))) - set(sensitive_set))
-        print('Samples in each subgroup: ', len(sensitive_set), len(sensitive_set_not))
+        # print('Samples in each subgroup: ', len(sensitive_set), len(sensitive_set_not))
         for S in [sensitive_set, sensitive_set_not]:
             # E_s = np.mean(lables[S])
             change = 1
@@ -22,7 +21,7 @@ def calibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
                 change = 0
                 for v in v_range:
                     S_v = [i for i in S if calibrated_predictions[i]<v+(1./lmbda) and calibrated_predictions[i]>=v]
-                    print('Cheking bin %.1f of size s_v: '%v, len(S_v))
+                    # print('Cheking bin %.1f of size s_v: '%v, len(S_v))
                     if len(S_v)< alpha*lmbda*len(S):
                         continue
                     E_predictions = np.mean(calibrated_predictions[S_v])    # V_hat
@@ -36,10 +35,8 @@ def calibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
                     if set(S_v)!=set([i for i in S if calibrated_predictions[i] < v + (1. / lmbda) and calibrated_predictions[i] >= v]):
                         change += 1
 
-            print('Accuracy for sensitive feature %d: '%sensitive_feature, expected_accuracy(labels[S_v],  predictions[S_v], calibrated_predictions[S_v]))
-            print('Calibration score for sensitive feature %d: ' % sensitive_feature,
-                  calibration_score(labels[S_v], predictions[S_v], calibrated_predictions[S_v]))
-
+            print('Accuracy for sensitive feature %d: '%sensitive_feature, expected_accuracy(labels[S],  predictions[S], calibrated_predictions[S]))
+    return calibrated_predictions
 
 
 def oracle(set, v_hat, omega, labels):

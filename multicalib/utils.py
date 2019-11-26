@@ -19,6 +19,7 @@ class EqualizedOddsReg(torch.nn.Module):
 
         return totloss
 
+
 def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
     # Construct our loss function and an Optimizer. Training this strange model with
     # vanilla stochastic gradient descent is tough, so we use momentum
@@ -66,11 +67,15 @@ def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
         total = 0
         correct = 0
 
+
 def expected_accuracy(labels, predictions, regularized_predictions):
+    # print(predictions[:10])
     predictions_b = (predictions>0.5).astype(int)
+    # print(predictions_b[:10])
     calibrated_predictions_b = (regularized_predictions > 0.5).astype(int)
     labels_b = labels.reshape(-1,)
-    return np.dot(labels_b ,predictions_b)/len(labels), np.dot(labels_b,calibrated_predictions_b)/len(labels)
+    # return np.dot(labels_b ,predictions_b)/len(labels), np.dot(labels_b,calibrated_predictions_b)/len(labels)
+    return np.sum(labels_b==predictions_b)/len(labels), np.sum(labels_b==calibrated_predictions_b)/len(labels)
 
 
 def calibration_score(labels, predictions, regularized_predictions, lmbda=5):
