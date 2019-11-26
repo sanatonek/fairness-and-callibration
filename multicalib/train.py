@@ -17,24 +17,15 @@ def train(args):
     if (args.data == 'income'):
         trainset = IncomeDataset(file='adult_train.npz', root_dir=args.path+'data/')
         trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
-        testset = IncomeDataset(file='adult_test.npz', root_dir=args.path+'data/')
-        testloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
     elif (args.data == 'credit'):
         trainset = CreditDataset(file='credit_card_default_train.xls', root_dir=args.path+'data/')
         trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
-        testset = CreditDataset(file='credit_card_default_test.xls', root_dir=args.path+'data/')
-        testloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
-
+ 
     # Train a predictor model
     model = NNetPredictor(trainset.__dim__())
     train_predictor(model, trainloader, epochs=args.epochs)
     torch.save(model, args.path+'models/checkpoint_'+args.data+'.mdl')
     torch.save(model.state_dict(), args.path+'models/checkpoint_'+args.data+'.pth')
-
-
-    model = model
-    trainset = trainset
-    testset = testset
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Use multicalibration to report clibrated results of a model')

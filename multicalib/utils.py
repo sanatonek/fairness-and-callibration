@@ -1,11 +1,30 @@
 import torch
 import numpy as np
+from torch.autograd import Variable
 
+class EqualizedOddsReg(torch.nn.Module):
+    
+    def __init__(self):
+        super(EqualizedOddsReg,self).__init__()
+        
+    def forward(self,predicted,y,a):
+        # Equalized odds definition
+        tpr_0= (torch.where((predicted==y)&(y==1)&(a==0))[0]).shape[0]/(torch.where((y==1))[0]).shape[0]
+        tnr_0 = (torch.where((predicted==y)&(y==0)&(a==0))[0]).shape[0]/(torch.where((y==0))[0]).shape[0]
+
+        tpr_1= (torch.where((predicted==y)&(y==1)&(a==1))[0]).shape[0]/(torch.where((y==1))[0]).shape[0]
+        tnr_1 = (torch.where((predicted==y)&(y==0)&(a==1))[0]).shape[0]/(torch.where((y==0))[0]).shape[0]
+
+        totloss = Variable(torch.tensor(abs(tpr_0-tpr_1))+torch.tensor(abs(tnr_0-tnr_1)), requires_grad=True)
+
+        return totloss
 
 def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
     # Construct our loss function and an Optimizer. Training this strange model with
     # vanilla stochastic gradient descent is tough, so we use momentum
     criterion = torch.nn.CrossEntropyLoss()
+    criterion_eq_odds = EqualizedOddsReg()
+
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)    
     epochs = 100
     total = 0
@@ -19,14 +38,16 @@ def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
             # Forward pass: Compute predicted y by passing x to the model
             y_pred = model(x)
             
-            # Compute and print loss
-            loss = criterion(y_pred, y)
-            
             _, predicted = torch.max(y_pred.data, 1)
             total += y.size(0)
             correct += (predicted == y).sum().item()
+
+            # Compute and print loss
+            #loss = criterion(y_pred, y)
+            loss = criterion(y_pred, y) + criterion_eq_odds(predicted, y, a)
+
             running_loss += loss
-            
+
             # Zero gradients, perform a backward pass, and update the weights.
             optimizer.zero_grad()
             loss.backward()
