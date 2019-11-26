@@ -29,6 +29,8 @@ def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
     epochs = 100
     total = 0
     correct = 0
+    pred_loss = 0
+    eq_odds_loss = 0
     running_loss = 0
         
     for t in range(epochs):
@@ -46,6 +48,8 @@ def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
             #loss = criterion(y_pred, y)
             loss = criterion(y_pred, y) + criterion_eq_odds(predicted, y, a)
 
+            pred_loss += criterion(y_pred, y)
+            eq_odds_loss += criterion_eq_odds(predicted, y, a)
             running_loss += loss
 
             # Zero gradients, perform a backward pass, and update the weights.
@@ -54,7 +58,9 @@ def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
             optimizer.step()
             
         if (t%10==0):
-            print('epoch: {}, loss: {:.5f}, accuracy: {:.2f}%'.format(t, running_loss/total, 100*correct/total))
+            print('epoch: {}, pred_loss: {:.5f}, eq_odds_loss: {:.5f}, loss: {:.5f}, accuracy: {:.2f}%'.format(t, pred_loss/total, eq_odds_loss/total, running_loss/total, 100*correct/total))
+            pred_loss = 0
+            eq_odds_loss = 0
             running_loss = 0
             total = 0
             correct = 0
