@@ -74,13 +74,20 @@ def expected_accuracy(labels, predictions, regularized_predictions):
     # print(predictions_b[:10])
     calibrated_predictions_b = (regularized_predictions > 0.5).astype(int)
     labels_b = labels.reshape(-1,)
+
+    #multicalibrated_predictions_b = (multicalibrated_predictions > 0.5).astype(int)
     # return np.dot(labels_b ,predictions_b)/len(labels), np.dot(labels_b,calibrated_predictions_b)/len(labels)
-    return np.sum(labels_b==predictions_b)/len(labels), np.sum(labels_b==calibrated_predictions_b)/len(labels)
+    #print(len(labels),len(labels_b),labels_b.shape,predictions_b.shape)
+    prediction_accuracy = np.sum(labels_b==predictions_b)/len(labels)
+    calibrated_accuracy = np.sum(labels_b==calibrated_predictions_b)/len(labels)
+    #multicalibrated_accuracy = np.sum(labels_b == multicalibrated_predictions_b/len(labels))
+    return prediction_accuracy, calibrated_accuracy 
 
 
 def calibration_score(labels, predictions, regularized_predictions, lmbda=5):
     prediction_scores = []
     regularized_score = []
+    #multicalibrated_score = []
     v_range = np.arange(0, 1, 1. / lmbda)
     for v in v_range:
         S_v = [i for i in range(len(labels)) if predictions[i] < v + (1. / lmbda) and predictions[i] >= v]
@@ -92,4 +99,4 @@ def calibration_score(labels, predictions, regularized_predictions, lmbda=5):
         if len(S_v)==0:
             continue
         regularized_score.append(np.mean(regularized_predictions[S_v]) - np.mean(labels[S_v]))
-    return np.mean(prediction_scores), np.mean(regularized_score)
+    return np.mean(prediction_scores), np.mean(regularized_score) 

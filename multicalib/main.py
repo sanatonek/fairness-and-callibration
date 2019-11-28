@@ -9,7 +9,7 @@ sys.path.append('..')
 
 from multicalib.models import IncomeDataset, CreditDataset, NNetPredictor
 from multicalib.utils import expected_accuracy, calibration_score
-from multicalib.multicalibration import calibrate
+from multicalib.multicalibration import calibrate,multicalibrate
 
 
 # 1:age_u30, 65: race_black, 66: female
@@ -39,16 +39,21 @@ def main(args):
     # Calibrate output
     calibrated_predictions = calibrate(data=x.numpy(), labels=y.numpy(), predictions=predictions.detach().numpy(),
                                        sensitive_features=features, alpha=0.08, lmbda=5)
+    multicalibrated_predictions = multicalibrate(data=x.numpy(), labels=y.numpy(), predictions=predictions.detach().numpy(),
+                                        sensitive_features=features, alpha=0.08, lmbda=5)
 
     # Evaluate performance
     for sensitive_feature in features:
         # Find the two subset of the sensitive feature
         sensitive_set = [i for i in range(len(x)) if x.numpy()[i, sensitive_feature] == 1]
         true_acc, calibrated_acc = expected_accuracy(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], calibrated_predictions[sensitive_set])
+        _, multicalibrated_acc = expected_accuracy(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], multicalibrated_predictions[sensitive_set])
         true_score, calibrated_score = calibration_score(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], calibrated_predictions[sensitive_set])
+        _,multicalibrated_score = calibration_score(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set],multicalibrated_predictions[sensitive_set])
         print("=====> Results for feature %d:"%sensitive_feature)
-        print("Original labels: \tAccuracy: %.2f \tCalibration score: %.2f" %(true_acc, true_score))
+        print("Original labels: \tAccuracy: %.2f \tCalibration score: %.2f " %(true_acc, true_score))
         print("Calibrated labels: \tAccuracy: %.2f \tCalibration score: %.2f" % (calibrated_acc, calibrated_score))
+        print("Multicalibrated labels: \tAccuracy: %.2f \tCalibration score: %.2f" % (multicalibrated_acc, multicalibrated_score))
 
 
 if __name__=='__main__':
