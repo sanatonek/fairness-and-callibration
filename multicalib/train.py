@@ -24,7 +24,7 @@ def train(args):
     # Train a predictor model
     model = NNetPredictor(trainset.__dim__())
     train_predictor(model, trainloader, epochs=args.epochs)
-    torch.save(model, args.path+'models/checkpoint_'+args.data+'.mdl')
+    # torch.save(model, args.path+'models/checkpoint_'+args.data+'.mdl')
     torch.save(model.state_dict(), args.path+'models/checkpoint_'+args.data+'.pth')
 
 

@@ -1,4 +1,5 @@
 import numpy as np
+from functools import reduce
 
 from multicalib.utils import expected_accuracy, calibration_score
 
@@ -33,15 +34,23 @@ def calibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
                         calibrated_predictions[S_v] = normalize(calibrated_predictions[S_v])
                     if set(S_v)!=set([i for i in S if calibrated_predictions[i] < v + (1. / lmbda) and calibrated_predictions[i] >= v]):
                         change += 1
-            print('Accuracy for sensitive feature %d: '%sensitive_feature, expected_accuracy(labels[S],  predictions[S], calibrated_predictions[S]))
-
+            # print('Accuracy for sensitive feature %d: '%sensitive_feature, expected_accuracy(labels[S],  predictions[S], calibrated_predictions[S]))
     return calibrated_predictions
+
+
 def multicalibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
+    # calibrated_predictions = predictions.copy()
+    # feature_list = list(range(len(sensitive_features)))
+    # ps = lambda s: reduce(lambda P, x: P + [subset | {x} for subset in P], s, [set()])
+    # subset_features = ps(feature_list)[1:]
+    # calibrated_predictions = calibrate(data, labels, predictions, subset_features, alpha, lmbda)
+
     calibrated_predictions = predictions.copy()
     print('Total number of samples to begin with: ', len(predictions))
     print('AE pre-multicalibration: ', abs(np.mean(labels)-np.mean(predictions)))
     v_range = np.arange(0,1,1./lmbda)
     multicalibrate_sets = all_subsets(data,sensitive_features)
+    print('%d sets to evaluate'%(len(multicalibrate_sets)))
     for S in multicalibrate_sets:
         if len(S) ==0 :
             continue
@@ -66,8 +75,9 @@ def multicalibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
                     change += 1
         print('Multicalibration Accuracy for S :', expected_accuracy(labels[S],  predictions[S], calibrated_predictions[S])) # doesn't give that much information like calibration
     return calibrated_predictions
+
+
 def oracle(set, v_hat, omega, labels):
-    
     ps = np.mean(labels[set])
     r=0
     if abs(ps-v_hat)<2*omega:
@@ -111,11 +121,12 @@ def all_subsets(data, sensitive_features):# all possible subsets of data with al
                 current_subset.append(j) 
         all_subsets.append(current_subset) 
     target_sets=[]
-    for i in range(len(all_subsets)):
+    for i in range(1,len(all_subsets)):
         required_sensitive_features = all_subsets[i]
         #targes_sets[i] = [i for i in range(len(data)) if data[i, sensitive_feature] == 1]
-        data_indices_matching_features = [idx for idx in range(len(data)) if 
-            data_matches_features(data[idx, :], required_sensitive_features, sensitive_features)]
+        data_indices_matching_features = [i for i in range(len(data)) if (data[i, list(required_sensitive_features)] == 1).all()]
+        # data_indices_matching_features = [idx for idx in range(len(data)) if
+        #     data_matches_features(data[idx, :], required_sensitive_features, sensitive_features)]
         target_sets.append(data_indices_matching_features)
     return target_sets
 
