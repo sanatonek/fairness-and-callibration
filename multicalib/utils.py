@@ -9,6 +9,9 @@ class EqualizedOddsReg(torch.nn.Module):
         
     def forward(self,predicted,y,a):
         # Equalized odds definition
+        predicted = torch.squeeze(predicted)
+        y = torch.squeeze(y)
+        
         tpr_0= (torch.where((predicted==y)&(y==1)&(a==0))[0]).shape[0]/(torch.where((y==1))[0]).shape[0]
         tnr_0 = (torch.where((predicted==y)&(y==0)&(a==0))[0]).shape[0]/(torch.where((y==0))[0]).shape[0]
 
