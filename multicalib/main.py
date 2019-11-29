@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 sys.path.append('..')
 
 from multicalib.models import IncomeDataset, CreditDataset, NNetPredictor
-from multicalib.utils import expected_accuracy, calibration_score
+from multicalib.utils import expected_accuracy, calibration_score, EqualizedOddsReg
 from multicalib.multicalibration import calibrate,multicalibrate
 
 
@@ -51,18 +51,27 @@ def main(args):
     for sensitive_feature in features:
         # Find the two subset of the sensitive feature
         sensitive_set = [i for i in range(len(x)) if x.numpy()[i, sensitive_feature] == 1]
+        # Find accuracies
         true_acc, calibrated_acc = expected_accuracy(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], calibrated_predictions[sensitive_set])
         _, multicalibrated_acc = expected_accuracy(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], multicalibrated_predictions[sensitive_set])
         _, reg_acc = expected_accuracy(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], predictions_reg.detach().numpy()[sensitive_set])
-
+        # Find calibration score
         true_score, calibrated_score = calibration_score(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], calibrated_predictions[sensitive_set])
         _,multicalibrated_score = calibration_score(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set],multicalibrated_predictions[sensitive_set])
         _, reg_calibrated_score = calibration_score(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], predictions_reg.detach().numpy()[sensitive_set])
+        # Find equalized odd score
+        eq = EqualizedOddsReg()
+        true_eq = eq(y, y, x[:, sensitive_feature])
+        calibrated_eq = eq(torch.Tensor(calibrated_predictions), y, x[:, sensitive_feature])
+        multicalibrated_eq = eq(torch.Tensor(multicalibrated_predictions), y, x[:,sensitive_feature])
+        reg_eq = eq(torch.Tensor(predictions_reg), y, x[:, sensitive_feature])
+
+
         print("=====> Results for feature %d:"%sensitive_feature)
-        print("Original labels: \tAccuracy: %.2f \tCalibration score: %.2f " %(true_acc, true_score))
-        print("Regularized labels: \tAccuracy: %.2f \tCalibration score: %.2f " % (reg_acc, reg_calibrated_score))
-        print("Calibrated labels: \tAccuracy: %.2f \tCalibration score: %.2f" % (calibrated_acc, calibrated_score))
-        print("Multicalibrated labels: \tAccuracy: %.2f \tCalibration score: %.2f" % (multicalibrated_acc, multicalibrated_score))
+        print("Original labels: \tAccuracy: %.2f \tCalibration score: %.2f \teq score: %.2f" %(true_acc, true_score, true_eq))
+        print("Regularized labels: \tAccuracy: %.2f \tCalibration score: %.2f \teq score: %.2f " % (reg_acc, reg_calibrated_score, calibrated_eq))
+        print("Calibrated labels: \tAccuracy: %.2f \tCalibration score: %.2f \teq score: %.2f" % (calibrated_acc, calibrated_score, calibrated_eq))
+        print("Multicalibrated labels: \tAccuracy: %.2f \tCalibration score: %.2f \teq score: %.2f" % (multicalibrated_acc, multicalibrated_score, multicalibrated_eq))
 
 
 if __name__=='__main__':
