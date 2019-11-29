@@ -23,9 +23,9 @@ def train(args):
  
     # Train a predictor model
     model = NNetPredictor(trainset.__dim__())
-    train_predictor(model, trainloader, epochs=args.epochs)
+    train_predictor(args, model, trainloader, epochs=args.epochs)
     # torch.save(model, args.path+'models/checkpoint_'+args.data+'.mdl')
-    torch.save(model.state_dict(), args.path+'models/checkpoint_'+args.data+'.pth')
+    torch.save(model.state_dict(), args.path+'models/checkpoint_'+args.data+'_reg_'+str(args.reg)+'.pth')
 
 
 if __name__=='__main__':
@@ -34,7 +34,7 @@ if __name__=='__main__':
     parser.add_argument('--epochs', type=int, default=80, help='Training epochs')
     parser.add_argument('--data', type=str, default='income', help='Training epochs')
     parser.add_argument('--path', type=str, default='./', help='Training epochs')
-    parser.add_argument('--train',  action='store_true', help='Train the predictor model first')
+    parser.add_argument('--reg', type=str, default='None', help='choose regularization scheme [None, eqo]')
 
     args = parser.parse_args()
     train(args)

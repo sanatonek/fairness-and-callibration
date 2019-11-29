@@ -20,14 +20,15 @@ class EqualizedOddsReg(torch.nn.Module):
         return totloss
 
 
-def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
+def train_predictor(args, model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
     # Construct our loss function and an Optimizer. Training this strange model with
     # vanilla stochastic gradient descent is tough, so we use momentum
     criterion = torch.nn.CrossEntropyLoss()
+
     criterion_eq_odds = EqualizedOddsReg()
 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)    
-    epochs = 100
+    epochs = args.epochs
     total = 0
     correct = 0
     pred_loss = 0
@@ -46,8 +47,10 @@ def train_predictor(model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
             correct += (predicted == y).sum().item()
 
             # Compute and print loss
-            #loss = criterion(y_pred, y)
-            loss = criterion(y_pred, y) + criterion_eq_odds(predicted, y, a)
+            if (args.reg=='eqo'):
+                loss = criterion(y_pred, y) + criterion_eq_odds(predicted, y, a)
+            else:
+                loss = criterion(y_pred, y)
 
             pred_loss += criterion(y_pred, y)
             eq_odds_loss += criterion_eq_odds(predicted, y, a)
