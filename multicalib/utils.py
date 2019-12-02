@@ -11,14 +11,16 @@ class EqualizedOddsReg(torch.nn.Module):
         # Equalized odds definition
         predicted = torch.squeeze(predicted)
         y = torch.squeeze(y)
-        
-        tpr_0= (torch.where((predicted==y)&(y==1)&(a==0))[0]).shape[0]/(torch.where((y==1))[0]).shape[0]
-        tnr_0 = (torch.where((predicted==y)&(y==0)&(a==0))[0]).shape[0]/(torch.where((y==0))[0]).shape[0]
+        a = torch.squeeze(a)
 
-        tpr_1= (torch.where((predicted==y)&(y==1)&(a==1))[0]).shape[0]/(torch.where((y==1))[0]).shape[0]
-        tnr_1 = (torch.where((predicted==y)&(y==0)&(a==1))[0]).shape[0]/(torch.where((y==0))[0]).shape[0]
+        tpr_0 = torch.div(torch.sum((predicted)*(y)*(1-a)),torch.sum(y))
+        tnr_0 = torch.div(torch.sum((predicted)*(1-y)*(1-a)),torch.sum(1-y))
+        tpr_1 = torch.div(torch.sum((predicted)*(y)*(a)),torch.sum(y))
+        tnr_1 = torch.div(torch.sum((predicted)*(1-y)*(a)),torch.sum(1-y))
 
-        totloss = Variable(torch.tensor(abs(tpr_0-tpr_1))+torch.tensor(abs(tnr_0-tnr_1)), requires_grad=True)
+        #totloss = Variable(torch.abs(torch.tensor(tpr_0-tpr_1))+torch.abs(torch.tensor(tnr_0-tnr_1)), requires_grad=True)
+        #totloss = Variable(torch.abs(torch.tensor(tpr_0-tpr_1)), requires_grad=True)
+        totloss = torch.mean(torch.abs((tpr_0-tpr_1)+(tnr_0-tnr_1)))
 
         return totloss
 
@@ -49,14 +51,20 @@ def train_predictor(args, model, train_loader, epochs=600, lr=1e-4, momentum=0.9
             total += y.size(0)
             correct += (predicted == y).sum().item()
 
+            predicted = Variable(predicted.type(torch.FloatTensor), requires_grad=True)
+            a = Variable(a.type(torch.FloatTensor), requires_grad=True)
+
             # Compute and print loss
             if (args.reg=='eqo'):
+                #print(criterion_eq_odds(predicted, y, a))
                 loss = criterion(y_pred, y) + criterion_eq_odds(predicted, y, a)
+                #loss = criterion_eq_odds(predicted, y, a)
             else:
                 loss = criterion(y_pred, y)
+                eq_odds_loss += 0.0
 
-            pred_loss += criterion(y_pred, y)
             eq_odds_loss += criterion_eq_odds(predicted, y, a)
+            pred_loss += criterion(y_pred, y)
             running_loss += loss
 
             # Zero gradients, perform a backward pass, and update the weights.

@@ -12,8 +12,14 @@ from multicalib.utils import expected_accuracy, calibration_score, EqualizedOdds
 from multicalib.multicalibration import calibrate,multicalibrate
 
 
-# 1:age_u30, 65: race_black, 66: female
-sensitive_features = {'income':[1, 65, 66]}
+sensitive_features = {
+                      # 1:age_u30, 65: race_black, 66: female
+                      'income':[1, 65, 66], 
+                      # 2: sex, 5: age
+                      'credit': [2, 5], 
+                      # 3: Age>45, 4: Age<25, 5: Black, 6: Asian, 7: Hispanic, 10: Female
+                      'recidivism': [5, 10]
+                     }
 
 
 def main(args):
@@ -25,6 +31,9 @@ def main(args):
     elif args.data == 'credit':
         testset = CreditDataset(file='credit_card_default_test.xls', root_dir=args.path+'data/')
         testloader = DataLoader(testset, batch_size=100, shuffle=True)
+    elif (args.data == 'recidivism'):
+        testset = RecidDataset(file='propublica_data_for_fairml_test.csv', root_dir=args.path+'data/')
+        testloader = DataLoader(trainset, batch_size=100, shuffle=True)    
     features = sensitive_features[args.data]
 
     # Load a predictor model

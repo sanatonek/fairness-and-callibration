@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
 from utils import train_predictor
-from models import IncomeDataset, CreditDataset, NNetPredictor
+from models import IncomeDataset, CreditDataset, RecidDataset, NNetPredictor
 
 sys.path.append('..')
 
@@ -19,6 +19,9 @@ def train(args):
         trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
     elif (args.data == 'credit'):
         trainset = CreditDataset(file='credit_card_default_train.xls', root_dir=args.path+'data/')
+        trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
+    elif (args.data == 'recidivism'):
+        trainset = RecidDataset(file='propublica_data_for_fairml_train.csv', root_dir=args.path+'data/')
         trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
  
     # Train a predictor model

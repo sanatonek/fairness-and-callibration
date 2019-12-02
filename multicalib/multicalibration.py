@@ -13,6 +13,7 @@ def calibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
         # Find the two subset of the sensitive feature
         sensitive_set = [i for i in range(len(data)) if data[i, sensitive_feature] == 1]
         sensitive_set_not = list(set(range(len(data))) - set(sensitive_set))
+        print(calibrated_predictions)
         # print('Samples in each subgroup: ', len(sensitive_set), len(sensitive_set_not))
         for S in [sensitive_set, sensitive_set_not]:
             # E_s = np.mean(lables[S])
@@ -81,9 +82,9 @@ def oracle(set, v_hat, omega, labels):
     ps = np.mean(labels[set])
     r=0
     if abs(ps-v_hat)<2*omega:
-        r =  100
+        r = 100
     if abs(ps-v_hat)>4*omega:
-        r =  np.random.uniform(0, 1)
+        r = np.random.uniform(0, 1)
     if r!=100:
         r = np.random.uniform(ps-omega, ps+omega)
     return r
