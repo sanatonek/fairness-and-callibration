@@ -70,7 +70,8 @@ def train_predictor(args, model, train_loader, epochs=600, lr=1e-4, momentum=0.9
             if (args.reg=='eqo'):
                 #print(criterion_eq_odds(predicted, y, a))
                 #loss = criterion(y_pred, y) + criterion_eq_odds(predicted, y, a)
-                loss = criterion_eq_odds(predicted, y, a) + totloss
+                #loss = criterion_eq_odds(predicted, y, a) + totloss
+                loss = criterion(y_pred, y) + totloss
             else:
                 loss = criterion(y_pred, y)
                 eq_odds_loss += 0.0
