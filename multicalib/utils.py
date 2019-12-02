@@ -70,15 +70,7 @@ def train_predictor(args, model, train_loader, epochs=600, lr=1e-4, momentum=0.9
             # loss = criterion(y_pred, y)
             # Compute and print loss
             if (args.reg=='eqo'):
-                #print(criterion_eq_odds(predicted, y, a))
-                #loss = criterion(y_pred, y) + criterion_eq_odds(predicted, y, a)
                 loss = loss + abs(tpr_0-tpr_1) + abs(tnr_0-tnr_1)
-            # else:
-            #     loss = criterion(y_pred, y)
-            #     eq_odds_loss += 0.0
-
-            # eq_odds_loss += criterion_eq_odds(predicted, y, a)
-            # pred_loss += criterion(y_pred, y)
             running_loss += loss
 
             # Zero gradients, perform a backward pass, and update the weights.
