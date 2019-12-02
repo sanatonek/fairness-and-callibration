@@ -20,7 +20,8 @@ class EqualizedOddsReg(torch.nn.Module):
 
         #totloss = Variable(torch.abs(torch.tensor(tpr_0-tpr_1))+torch.abs(torch.tensor(tnr_0-tnr_1)), requires_grad=True)
         #totloss = Variable(torch.abs(torch.tensor(tpr_0-tpr_1)), requires_grad=True)
-        totloss = torch.mean(torch.abs((tpr_0-tpr_1)+(tnr_0-tnr_1)))
+        #totloss = torch.mean(torch.abs((tpr_0-tpr_1)+(tnr_0-tnr_1)))
+        totloss = 1000.0*torch.mean(torch.abs((tpr_0-tpr_1)+(tnr_0-tnr_1)))
 
         return totloss
 
@@ -52,13 +53,24 @@ def train_predictor(args, model, train_loader, epochs=600, lr=1e-4, momentum=0.9
             correct += (predicted == y).sum().item()
 
             predicted = Variable(predicted.type(torch.FloatTensor), requires_grad=True)
-            a = Variable(a.type(torch.FloatTensor), requires_grad=True)
+            #a = Variable(a.type(torch.FloatTensor), requires_grad=True)
+
+            tpr_0 = torch.div(torch.sum((predicted)*(y)*(1-a)),torch.sum(y))
+            tnr_0 = torch.div(torch.sum((predicted)*(1-y)*(1-a)),torch.sum(1-y))
+            tpr_1 = torch.div(torch.sum((predicted)*(y)*(a)),torch.sum(y))
+            tnr_1 = torch.div(torch.sum((predicted)*(1-y)*(a)),torch.sum(1-y))
+
+            #totloss = Variable(torch.abs(torch.tensor(tpr_0-tpr_1))+torch.abs(torch.tensor(tnr_0-tnr_1)), requires_grad=True)
+            #totloss = Variable(torch.abs(torch.tensor(tpr_0-tpr_1)), requires_grad=True)
+            #totloss = torch.mean(torch.abs((tpr_0-tpr_1)+(tnr_0-tnr_1)))
+            #totloss = 1.0*torch.mean(torch.abs((tpr_0-tpr_1)+(tnr_0-tnr_1)))
+            totloss = 0.0
 
             # Compute and print loss
             if (args.reg=='eqo'):
                 #print(criterion_eq_odds(predicted, y, a))
-                loss = criterion(y_pred, y) + criterion_eq_odds(predicted, y, a)
-                #loss = criterion_eq_odds(predicted, y, a)
+                #loss = criterion(y_pred, y) + criterion_eq_odds(predicted, y, a)
+                loss = criterion_eq_odds(predicted, y, a) + totloss
             else:
                 loss = criterion(y_pred, y)
                 eq_odds_loss += 0.0
