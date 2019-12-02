@@ -9,6 +9,7 @@ from models import IncomeDataset, CreditDataset, RecidDataset, NNetPredictor
 
 sys.path.append('..')
 
+
 def train(args):
     args = args
     model = []
@@ -25,6 +26,7 @@ def train(args):
         trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
  
     # Train a predictor model
+    print(trainset.__dim__())
     model = NNetPredictor(trainset.__dim__())
     train_predictor(args, model, trainloader, epochs=args.epochs)
     # torch.save(model, args.path+'models/checkpoint_'+args.data+'.mdl')
