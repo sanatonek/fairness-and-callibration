@@ -48,29 +48,18 @@ def train_predictor(args, model, train_loader, epochs=600, lr=1e-4, momentum=0.9
             y_pred = torch.nn.Sigmoid()(model(x))[:,1]
             
             # _, predicted = torch.max(y_pred.data, 1)
-            predicted = y_pred>0.5
+            predicted = (y_pred>0.5).float()
             total += y.size(0)
             correct += (predicted == y).sum().item()
 
             loss = criterion(y_pred.float(), y.float())
 
-            # predicted = Variable(predicted.type(torch.FloatTensor), requires_grad=True)
-            #a = Variable(a.type(torch.FloatTensor), requires_grad=True)
-            tpr_0 = torch.div(torch.sum((predicted)*(y)*(1-a)),torch.sum(y))
-            tnr_0 = torch.div(torch.sum((predicted)*(1-y)*(1-a)),torch.sum(1-y))
-            tpr_1 = torch.div(torch.sum((predicted)*(y)*(a)),torch.sum(y))
-            tnr_1 = torch.div(torch.sum((predicted)*(1-y)*(a)),torch.sum(1-y))
-
-            #totloss = Variable(torch.abs(torch.tensor(tpr_0-tpr_1))+torch.abs(torch.tensor(tnr_0-tnr_1)), requires_grad=True)
-            #totloss = Variable(torch.abs(torch.tensor(tpr_0-tpr_1)), requires_grad=True)
-            #totloss = torch.mean(torch.abs((tpr_0-tpr_1)+(tnr_0-tnr_1)))
-            #totloss = 1.0*torch.mean(torch.abs((tpr_0-tpr_1)+(tnr_0-tnr_1)))
-            # totloss = 0.0
-
-            # loss = criterion(y_pred, y)
-            # Compute and print loss
             if (args.reg=='eqo'):
-                loss = loss + abs(tpr_0-tpr_1) + abs(tnr_0-tnr_1)
+                tpr_0 = torch.div(torch.sum((predicted) * (y) * (1 - a)), torch.sum(y * (1 - a)))
+                tnr_0 = torch.div(torch.sum((predicted) * (1 - y) * (1 - a)), torch.sum((1 - y) * (1 - a)))
+                tpr_1 = torch.div(torch.sum((predicted) * (y) * (a)), torch.sum(y * (a)))
+                tnr_1 = torch.div(torch.sum((predicted) * (1 - y) * (a)), torch.sum((1 - y) * a))
+                loss = loss + 10*((tpr_0-tpr_1)*(tpr_0-tpr_1) + (tnr_0-tnr_1)*(tnr_0-tnr_1))
             running_loss += loss
 
             # Zero gradients, perform a backward pass, and update the weights.

@@ -60,7 +60,7 @@ def multicalibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
                 E_predictions = np.mean(calibrated_predictions[S_v])    # V_hat
                 r = oracle(S_v, E_predictions, alpha/4, labels)
                 if r!=100:
-                    print('Update value: ', r)
+                    # print('Update value: ', r)
                     calibrated_predictions[S_v] = calibrated_predictions[S_v] + (r-E_predictions)
 
                 if (calibrated_predictions[S_v]<0).any() or (calibrated_predictions[S_v]>1).any():

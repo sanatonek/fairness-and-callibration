@@ -1,6 +1,7 @@
 import sys
 import torch
 import argparse
+import random
 import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
@@ -13,6 +14,7 @@ sys.path.append('..')
 def train(args):
     args = args
     model = []
+    random.seed(1234)
 
     # Load the datasets
     if (args.data == 'income'):
@@ -36,7 +38,7 @@ def train(args):
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Use multicalibration to report clibrated results of a model')
     parser.add_argument('--batch_size', type=int, default=100, help='Training batch size')
-    parser.add_argument('--epochs', type=int, default=80, help='Training epochs')
+    parser.add_argument('--epochs', type=int, default=30, help='Training epochs')
     parser.add_argument('--data', type=str, default='income', help='Training epochs')
     parser.add_argument('--path', type=str, default='./', help='Training epochs')
     parser.add_argument('--reg', type=str, default='None', help='choose regularization scheme [None, eqo]')

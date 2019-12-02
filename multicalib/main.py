@@ -59,6 +59,10 @@ def main(args):
     # Evaluate performance
     for sensitive_feature in features:
         print('\n=====> Results for feature ', sensitive_feature)
+        print('********** Overal Accuracy **********')
+        print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
+              %(expected_accuracy(y.numpy(), predictions.detach().numpy()) , expected_accuracy(y.numpy(), predictions_reg.detach().numpy()),
+              expected_accuracy(y.numpy(), calibrated_predictions) , expected_accuracy(y.numpy(), multicalibrated_predictions)))
         # Find the two subset of the sensitive feature
         sensitive_set = [i for i in range(len(x)) if x.numpy()[i, sensitive_feature] == 1]
 
