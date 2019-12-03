@@ -9,12 +9,12 @@ from utils import train_predictor
 from models import IncomeDataset, CreditDataset, RecidDataset, NNetPredictor
 
 sys.path.append('..')
+random.seed(1234)
 
 
 def train(args):
     args = args
     model = []
-    random.seed(1234)
 
     # Load the datasets
     if (args.data == 'income'):

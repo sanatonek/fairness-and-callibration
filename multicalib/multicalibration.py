@@ -45,15 +45,15 @@ def calibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
 def multicalibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
     calibrated_predictions = predictions.copy()
     v_range = np.arange(0,1,1./lmbda)
-    multicalibrate_sets = all_subsets(data,sensitive_features)
+    multicalibrate_sets = all_subsets(data, sensitive_features)
     for S in multicalibrate_sets:
-        if len(S) ==0 :
+        if len(S)==0:
             continue
         change = 1
         while change > 0:
             change = 0
             for v in v_range:
-                S_v = [i for i in S if calibrated_predictions[i]<v+(1./lmbda) and calibrated_predictions[i]>=v]
+                S_v = [i for i in S if calibrated_predictions[i]<(v+(1./lmbda)) and calibrated_predictions[i]>=v]
                 if len(S_v) <= alpha*lmbda*len(S):
                     continue
                 print(alpha*lmbda*len(S), "%%%%", len(S_v))
@@ -65,7 +65,7 @@ def multicalibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
 
                 if (calibrated_predictions[S_v]<0).any() or (calibrated_predictions[S_v]>1).any():
                     calibrated_predictions[S_v] = normalize(calibrated_predictions[S_v])
-                if set(S_v)!=set([i for i in S if calibrated_predictions[i] < v + (1. / lmbda) and calibrated_predictions[i] >= v]):
+                if set(S_v)!=set([i for i in S if calibrated_predictions[i] < (v+(1./lmbda)) and calibrated_predictions[i] >= v]):
                     change += 1
     return calibrated_predictions
 

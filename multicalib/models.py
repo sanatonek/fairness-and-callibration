@@ -4,6 +4,8 @@ import pandas as pd
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
+import random
+random.seed(1234)
 
 
 class IncomeDataset(Dataset):

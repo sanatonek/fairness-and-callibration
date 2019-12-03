@@ -46,11 +46,13 @@ def train_predictor(args, model, train_loader, epochs=600, lr=1e-4, momentum=0.9
             
             # Forward pass: Compute predicted y by passing x to the model
             y_pred = torch.nn.Sigmoid()(model(x))[:,1]
+            predicted = torch.sigmoid(y_pred)
             
             # _, predicted = torch.max(y_pred.data, 1)
-            predicted = (y_pred>0.5).float()
+            # predicted = (y_pred>0.5).float()
+            # print(predicted[:10])
             total += y.size(0)
-            correct += (predicted == y).sum().item()
+            correct += ((y_pred>0.5).float() == y).sum().item()
 
             loss = criterion(y_pred.float(), y.float())
 
