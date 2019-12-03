@@ -26,7 +26,7 @@ class EqualizedOddsReg(torch.nn.Module):
         return totloss
 
 
-def train_predictor(args, model, train_loader, epochs=600, lr=1e-4, momentum=0.9):
+def train_predictor(args, model, train_loader, epochs, lmbda, lr=1e-4, momentum=0.9):
     # Construct our loss function and an Optimizer. Training this strange model with
     # vanilla stochastic gradient descent is tough, so we use momentum
     # criterion = torch.nn.CrossEntropyLoss()
@@ -36,8 +36,6 @@ def train_predictor(args, model, train_loader, epochs=600, lr=1e-4, momentum=0.9
     epochs = args.epochs
     total = 0
     correct = 0
-    pred_loss = 0
-    eq_odds_loss = 0
     running_loss = 0
         
     for t in range(epochs):
@@ -46,13 +44,14 @@ def train_predictor(args, model, train_loader, epochs=600, lr=1e-4, momentum=0.9
             
             # Forward pass: Compute predicted y by passing x to the model
             y_pred = torch.nn.Sigmoid()(model(x))[:,1]
-            predicted = torch.sigmoid(y_pred)
+            predicted = (y_pred)
             
             # _, predicted = torch.max(y_pred.data, 1)
             # predicted = (y_pred>0.5).float()
             # print(predicted[:10])
             total += y.size(0)
-            correct += ((y_pred>0.5).float() == y).sum().item()
+            predicted_class = (y_pred>0.5).float()
+            correct += (predicted_class==y).sum().item()
 
             loss = criterion(y_pred.float(), y.float())
 
@@ -61,7 +60,8 @@ def train_predictor(args, model, train_loader, epochs=600, lr=1e-4, momentum=0.9
                 tnr_0 = torch.div(torch.sum((predicted) * (1 - y) * (1 - a)), torch.sum((1 - y) * (1 - a)))
                 tpr_1 = torch.div(torch.sum((predicted) * (y) * (a)), torch.sum(y * (a)))
                 tnr_1 = torch.div(torch.sum((predicted) * (1 - y) * (a)), torch.sum((1 - y) * a))
-                loss = loss + 10*((tpr_0-tpr_1)*(tpr_0-tpr_1) + (tnr_0-tnr_1)*(tnr_0-tnr_1))
+                if tpr_0!= tpr_0 and tpr_1!= tpr_1 and tnr_0!= tnr_0 and tnr_1!= tnr_1:
+                    loss = loss + lmbda*((tpr_0-tpr_1)*(tpr_0-tpr_1) + (tnr_0-tnr_1)*(tnr_0-tnr_1))
             running_loss += loss
 
             # Zero gradients, perform a backward pass, and update the weights.
@@ -93,7 +93,8 @@ def calibration_score(labels, predictions, lmbda=5):
         S_v = [i for i in range(len(labels)) if predictions[i] < v + (1. / lmbda) and predictions[i] >= v]
         if len(S_v)==0:
             continue
-        # prediction_scores.append(abs(np.mean(predictions[S_v])-np.mean(labels[S_v])))
-        prediction_scores.append(abs(np.mean(predictions[S_v])-(v+(1. / (2*lmbda)))))
+        else:
+            prediction_scores.append(abs(np.mean(predictions[S_v])-np.mean(labels[S_v])))
+        # prediction_scores.append(abs(np.mean(predictions[S_v])-(v+(1./(2*lmbda)))))
     prediction_scores = np.array(prediction_scores)
     return np.mean(prediction_scores)

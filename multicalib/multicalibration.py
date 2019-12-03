@@ -11,8 +11,10 @@ sensitive_features = {
                       'recidivism': [5, 10]
                      }
 
+
 def calibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
-    calibrated_predictions = predictions.copy()
+    # calibrated_predictions = predictions.copy()
+    calibrated_predictions = np.zeros(predictions.shape) + 0.5
     v_range = np.arange(0,1,1./lmbda)
     for sensitive_feature in sensitive_features:
         # Find the two subset of the sensitive feature
@@ -41,32 +43,37 @@ def calibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
                         change += 1
     return calibrated_predictions
 
-
 def multicalibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
-    calibrated_predictions = predictions.copy()
+    # calibrated_predictions = predictions.copy()
+    calibrated_predictions = np.zeros(predictions.shape) + 0.5
     v_range = np.arange(0,1,1./lmbda)
     multicalibrate_sets = all_subsets(data, sensitive_features)
-    for S in multicalibrate_sets:
-        if len(S)==0:
-            continue
-        change = 1
-        while change > 0:
-            change = 0
-            for v in v_range:
-                S_v = [i for i in S if calibrated_predictions[i]<(v+(1./lmbda)) and calibrated_predictions[i]>=v]
-                if len(S_v) <= alpha*lmbda*len(S):
-                    continue
-                print(alpha*lmbda*len(S), "%%%%", len(S_v))
-                E_predictions = np.mean(calibrated_predictions[S_v])    # V_hat
-                r = oracle(S_v, E_predictions, alpha/4, labels)
-                if r!=100:
-                    # print('Update value: ', r)
-                    calibrated_predictions[S_v] = calibrated_predictions[S_v] + (r-E_predictions)
 
-                if (calibrated_predictions[S_v]<0).any() or (calibrated_predictions[S_v]>1).any():
-                    calibrated_predictions[S_v] = normalize(calibrated_predictions[S_v])
-                if set(S_v)!=set([i for i in S if calibrated_predictions[i] < (v+(1./lmbda)) and calibrated_predictions[i] >= v]):
-                    change += 1
+    change = 1
+    while change > 0:
+        change = 0
+        for sets in multicalibrate_sets:
+            set_not = list(set(range(len(data))) - set(sets))
+            for S in [sets, set_not]:
+                if len(S)==0:
+                    continue
+                for v in v_range:
+                    S_v = [i for i in S if calibrated_predictions[i]<(v+(1./lmbda)) and calibrated_predictions[i]>=v]
+                    if len(S_v) <= alpha*lmbda*len(S):
+                        continue
+                    # print(alpha*lmbda*len(S), "%%%%", len(S_v))
+                    E_predictions = np.mean(calibrated_predictions[S_v])    # V_hat
+                    print(E_predictions, np.mean(labels[S_v]))
+                    r = oracle(S_v, E_predictions, alpha/4, labels)
+                    if r!=100:
+                        print('Update value: ', r)
+                        calibrated_predictions[S_v] = calibrated_predictions[S_v] + (r-E_predictions)
+                        change += 1
+
+                    if (calibrated_predictions[S_v]<0).any() or (calibrated_predictions[S_v]>1).any():
+                        calibrated_predictions[S_v] = normalize(calibrated_predictions[S_v])
+                        # if set(S_v)!=set([i for i in S if calibrated_predictions[i] < (v+(1./lmbda)) and calibrated_predictions[i] >= v]):
+                        #     change += 1
     return calibrated_predictions
 
 

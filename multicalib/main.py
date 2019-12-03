@@ -4,6 +4,7 @@ import argparse
 import os
 import numpy as np
 import pandas as pd
+import random
 from torch.utils.data import DataLoader
 sys.path.append('..')
 
@@ -52,19 +53,23 @@ def main(args):
 
     # Calibrate output
     calibrated_predictions = calibrate(data=x.numpy(), labels=y.numpy(), predictions=predictions.detach().numpy(),
-                                       sensitive_features=[1, 65, 66], alpha=args.alpha, lmbda=5)
+                                       sensitive_features=sensitive_features[args.data], alpha=args.alpha, lmbda=args.lmbda)
     multicalibrated_predictions = multicalibrate(data=x.numpy(), labels=y.numpy(), predictions=predictions.detach().numpy(),
-                                        sensitive_features=features, alpha=args.alpha, lmbda=5)
+                                        sensitive_features=sensitive_features[args.data], alpha=args.alpha, lmbda=args.lmbda)
+    # multicalibrated_predictions = multicalibrate(data=x.numpy(), labels=y.numpy(), predictions=predictions.detach().numpy(),
+    #                                     sensitive_features=random.sample(list(range(x.shape[1])),22), alpha=args.alpha, lmbda=args.lmbda)
 
     # Evaluate performance
     for sensitive_feature in features:
         print('\n=====> Results for feature ', sensitive_feature)
-        print('********** Overal Accuracy **********')
+        print('********** Overall Accuracy **********')
         print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
               %(expected_accuracy(y.numpy(), predictions.detach().numpy()) , expected_accuracy(y.numpy(), predictions_reg.detach().numpy()),
               expected_accuracy(y.numpy(), calibrated_predictions) , expected_accuracy(y.numpy(), multicalibrated_predictions)))
         # Find the two subset of the sensitive feature
         sensitive_set = [i for i in range(len(x)) if x.numpy()[i, sensitive_feature] == 1]
+        if len(sensitive_set)==0:
+            continue
 
         y_s = y.numpy()[sensitive_set]
         prediction_s = predictions.detach().numpy()[sensitive_set]
@@ -74,18 +79,18 @@ def main(args):
 
         ## TPR, TNR
         # ground truth
-        tpr = np.dot((prediction_s), (y_s))/ np.sum(y_s)
-        tnr = np.dot((prediction_s), (1 - y_s))/ np.sum(1 - y_s)
+        tpr = 0 if np.sum(y_s)==0 else np.dot((prediction_s), (y_s))/ np.sum(y_s)
+        tnr = 0 if np.sum(1-y_s)==0 else  np.dot((prediction_s), (1 - y_s))/ np.sum(1 - y_s)
         # reg
-        tpr_reg = np.dot((predictions_reg_s), (y_s))/np.sum(y_s)
-        tnr_reg = np.dot((predictions_reg_s), (1 - y_s))/ np.sum(1 - y_s)
+        tpr_reg = 0 if np.sum(y_s)==0 else  np.dot((predictions_reg_s), (y_s))/np.sum(y_s)
+        tnr_reg = 0 if np.sum(1-y_s)==0 else  np.dot((predictions_reg_s), (1 - y_s))/ np.sum(1 - y_s)
         # calib
-        tpr_reg_calib = np.dot(calibrated_predictions_s, y_s)/ np.sum(y_s)
-        tnr_reg_calib = np.dot(calibrated_predictions_s, (1 - y_s))/ np.sum(1 - y_s)
+        tpr_reg_calib = 0 if np.sum(y_s)==0 else  np.dot(calibrated_predictions_s, y_s)/ np.sum(y_s)
+        tnr_reg_calib = 0 if np.sum(1-y_s)==0 else  np.dot(calibrated_predictions_s, (1 - y_s))/ np.sum(1 - y_s)
         # multicalib
-        tpr_reg_multicalib = np.dot(multicalibrated_predictions_s, y_s)/ np.sum(y_s)
-        tnr_reg_multicalib = np.dot(multicalibrated_predictions_s, (1 - y_s))/ np.sum(1 - y_s)
-        print('********** TPR **********')
+        tpr_reg_multicalib = 0 if np.sum(y_s)==0 else  np.dot(multicalibrated_predictions_s, y_s)/ np.sum(y_s)
+        tnr_reg_multicalib = 0 if np.sum(1-y_s)==0 else  np.dot(multicalibrated_predictions_s, (1 - y_s))/ np.sum(1 - y_s)
+        print('\n********** TPR **********')
         print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
               %(tpr, tpr_reg, tpr_reg_calib, tpr_reg_multicalib))
         print('********** TNR **********')
@@ -108,45 +113,23 @@ def main(args):
 
         ##  Calibration
         # Ground truth
-        calibration = calibration_score(y_s, prediction_s)
+        calibration = calibration_score(y_s, prediction_s, args.lmbda)
         # reg
-        calibration_reg = calibration_score(y_s, predictions_reg_s)
+        calibration_reg = calibration_score(y_s, predictions_reg_s, args.lmbda)
         # calib
-        calibration_calib = calibration_score(y_s, calibrated_predictions_s)
+        calibration_calib = calibration_score(y_s, calibrated_predictions_s, args.lmbda)
         # multicalib
-        calibration_multicalib = calibration_score(y_s, multicalibrated_predictions_s)
+        calibration_multicalib = calibration_score(y_s, multicalibrated_predictions_s, args.lmbda)
         print('********** Calibration **********')
         print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
               %(calibration, calibration_reg, calibration_calib, calibration_multicalib))
-
-
-        # true_acc, calibrated_acc = expected_accuracy(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], calibrated_predictions[sensitive_set])
-        # _, multicalibrated_acc = expected_accuracy(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], multicalibrated_predictions[sensitive_set])
-        # _, reg_acc = expected_accuracy(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], predictions_reg.detach().numpy()[sensitive_set])
-        # # Find calibration score
-        # true_score, calibrated_score = calibration_score(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], calibrated_predictions[sensitive_set])
-        # _, multicalibrated_score = calibration_score(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set],multicalibrated_predictions[sensitive_set])
-        # _, reg_calibrated_score = calibration_score(y.numpy()[sensitive_set], predictions.detach().numpy()[sensitive_set], predictions_reg.detach().numpy()[sensitive_set])
-        # # Find equalized odd score
-        # # eq = EqualizedOddsReg()
-        # true_eq = eq(y, y, x[:, sensitive_feature])
-        # calibrated_eq = eq(torch.Tensor(calibrated_predictions), y, x[:, sensitive_feature])
-        # multicalibrated_eq = eq(torch.Tensor(multicalibrated_predictions), y, x[:,sensitive_feature])
-        # reg_eq = eq(torch.Tensor(predictions_reg), y, x[:, sensitive_feature])
-        #
-        #
-        # print("=====> Results for feature %d:"%sensitive_feature)
-        # print("Original labels: \tAccuracy: %.2f \tCalibration score: %.2f \teq score: %.2f" %(true_acc, true_score, true_eq))
-        # print("Regularized labels: \tAccuracy: %.2f \tCalibration score: %.2f \teq score: %.2f " % (reg_acc, reg_calibrated_score, calibrated_eq))
-        # print("Calibrated labels: \tAccuracy: %.2f \tCalibration score: %.2f \teq score: %.2f" % (calibrated_acc, calibrated_score, calibrated_eq))
-        # print("Multicalibrated labels: \tAccuracy: %.2f \tCalibration score: %.2f \teq score: %.2f" % (multicalibrated_acc, multicalibrated_score, multicalibrated_eq))
-
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Use multicalibration to report clibrated results of a model')
     parser.add_argument('--data', type=str, default='income', help='Dataset to use for the experiment')
     parser.add_argument('--path', type=str, default='./', help='Root directory path')
-    parser.add_argument('--alpha', type=float, default=0.1, help='Alpha parameter for calibration')
+    parser.add_argument('--alpha', type=float, default=0.02, help='Alpha parameter for calibration')
+    parser.add_argument('--lmbda', type=float, default=10, help='Lambda parameter for calibration')
 
     args = parser.parse_args()
     main(args)
