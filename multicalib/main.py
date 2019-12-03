@@ -7,9 +7,9 @@ import pandas as pd
 from torch.utils.data import DataLoader
 sys.path.append('..')
 
-from multicalib.models import IncomeDataset, CreditDataset, NNetPredictor
+from multicalib.models import IncomeDataset, CreditDataset, RecidDataset, NNetPredictor
 from multicalib.utils import expected_accuracy, calibration_score, EqualizedOddsReg
-from multicalib.multicalibration import calibrate,multicalibrate
+from multicalib.multicalibration import calibrate, multicalibrate
 
 
 sensitive_features = {
@@ -33,7 +33,8 @@ def main(args):
         testloader = DataLoader(testset, batch_size=100, shuffle=True)
     elif (args.data == 'recidivism'):
         testset = RecidDataset(file='propublica_data_for_fairml_test.csv', root_dir=args.path+'data/')
-        testloader = DataLoader(trainset, batch_size=100, shuffle=True)    
+        testloader = DataLoader(testset, batch_size=100, shuffle=True)    
+    
     features = sensitive_features[args.data]
 
     # Load a predictor model
@@ -50,9 +51,8 @@ def main(args):
     predictions_reg = torch.nn.Sigmoid()(model_reg(x))[:, 1]
 
 
-    # Calibrate output
     calibrated_predictions = calibrate(data=x.numpy(), labels=y.numpy(), predictions=predictions.detach().numpy(),
-                                       sensitive_features=[1, 65, 66], alpha=args.alpha, lmbda=5)
+                                       sensitive_features=sensitive_features[args.data], alpha=args.alpha, lmbda=5)
     multicalibrated_predictions = multicalibrate(data=x.numpy(), labels=y.numpy(), predictions=predictions.detach().numpy(),
                                         sensitive_features=features, alpha=args.alpha, lmbda=5)
 
