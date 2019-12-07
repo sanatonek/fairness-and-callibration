@@ -1,6 +1,7 @@
 import numpy as np
 from functools import reduce
-
+import random
+random.seed(1945)
 
 sensitive_features = {
                       # 1:age_u30, 65: race_black, 66: female
@@ -48,14 +49,17 @@ def multicalibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
     calibrated_predictions = np.zeros(predictions.shape) + 0.5
     v_range = np.arange(0,1,1./lmbda)
     multicalibrate_sets = all_subsets(data, sensitive_features)
-
+    # criteria set to 1000 if dataset has 113 features else 100 (2 datasets for now...)
+    leaf_node_crit = [1000.0 if data.shape[1]==113 else 100.0][0] 
     change = 1
     while change > 0:
         change = 0
         for sets in multicalibrate_sets:
             set_not = list(set(range(len(data))) - set(sets))
             for S in [sets, set_not]:
-                if len(S)==0:
+                print(data.shape)
+                #if len(S)==0: # sk-debug
+                if len(S)<leaf_node_crit:
                     continue
                 for v in v_range:
                     S_v = [i for i in S if calibrated_predictions[i]<(v+(1./lmbda)) and calibrated_predictions[i]>=v]
