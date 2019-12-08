@@ -5,6 +5,7 @@ import os
 import numpy as np
 import pandas as pd
 import random
+random.seed(1945)
 from torch.utils.data import DataLoader
 sys.path.append('..')
 
