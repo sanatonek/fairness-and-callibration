@@ -1,29 +1,5 @@
 import torch
 import numpy as np
-from torch.autograd import Variable
-
-class EqualizedOddsReg(torch.nn.Module):
-    
-    def __init__(self):
-        super(EqualizedOddsReg,self).__init__()
-        
-    def forward(self,predicted,y,a):
-        # Equalized odds definition
-        predicted = torch.squeeze(predicted)
-        y = torch.squeeze(y)
-        a = torch.squeeze(a)
-
-        tpr_0 = torch.div(torch.sum((predicted)*(y)*(1-a)),torch.sum(y))
-        tnr_0 = torch.div(torch.sum((predicted)*(1-y)*(1-a)),torch.sum(1-y))
-        tpr_1 = torch.div(torch.sum((predicted)*(y)*(a)),torch.sum(y))
-        tnr_1 = torch.div(torch.sum((predicted)*(1-y)*(a)),torch.sum(1-y))
-
-        #totloss = Variable(torch.abs(torch.tensor(tpr_0-tpr_1))+torch.abs(torch.tensor(tnr_0-tnr_1)), requires_grad=True)
-        #totloss = Variable(torch.abs(torch.tensor(tpr_0-tpr_1)), requires_grad=True)
-        #totloss = torch.mean(torch.abs((tpr_0-tpr_1)+(tnr_0-tnr_1)))
-        totloss = 1000.0*torch.mean(torch.abs((tpr_0-tpr_1)+(tnr_0-tnr_1)))
-
-        return totloss
 
 
 def train_predictor(args, model, train_loader, epochs, lmbda, lr=1e-4, momentum=0.9):
@@ -56,12 +32,16 @@ def train_predictor(args, model, train_loader, epochs, lmbda, lr=1e-4, momentum=
             loss = criterion(y_pred.float(), y.float())
 
             if (args.reg=='eqo'):
-                tpr_0 = torch.div(torch.sum((predicted) * (y) * (1 - a)), torch.sum(y * (1 - a)))
-                tnr_0 = torch.div(torch.sum((predicted) * (1 - y) * (1 - a)), torch.sum((1 - y) * (1 - a)))
-                tpr_1 = torch.div(torch.sum((predicted) * (y) * (a)), torch.sum(y * (a)))
-                tnr_1 = torch.div(torch.sum((predicted) * (1 - y) * (a)), torch.sum((1 - y) * a))
-                if tpr_0!= tpr_0 and tpr_1!= tpr_1 and tnr_0!= tnr_0 and tnr_1!= tnr_1:
-                    loss = loss + lmbda*((tpr_0-tpr_1)*(tpr_0-tpr_1) + (tnr_0-tnr_1)*(tnr_0-tnr_1))
+                a = a.view(-1,)
+                tpr_0 = 0 if torch.sum(y[a==0].float())==0 else \
+                    torch.dot(predicted[a==0], y[a==0].float())/torch.sum(y[a==0].float())
+                tpr_1 = 0 if torch.sum((1-y)[a==0].float())==0 else \
+                    torch.dot(predicted[a == 0], (1-y)[a == 0].float())/torch.sum((1-y)[a==0].float())
+                tnr_0 = 0 if torch.sum(y[a==1].float())==0 else \
+                    torch.dot(predicted[a == 1], y[a == 1].float())/torch.sum(y[a==1].float())
+                tnr_1 = 0 if torch.sum((1-y)[a==1].float())==0 else \
+                    torch.dot(predicted[a == 1], (1-y)[a == 1].float())/torch.sum((1-y)[a==1].float())
+                loss = loss + lmbda*((tpr_0-tpr_1)*(tpr_0-tpr_1) + (tnr_0-tnr_1)*(tnr_0-tnr_1))
             running_loss += loss
 
             # Zero gradients, perform a backward pass, and update the weights.
@@ -69,11 +49,9 @@ def train_predictor(args, model, train_loader, epochs, lmbda, lr=1e-4, momentum=
             loss.backward()
             optimizer.step()
 
-        if (t%10==0):
+        if t%10==0:
             print('epoch: {}, loss: {:.5f}, accuracy: {:.2f}%'.format(t, running_loss/total, 100*correct/total))
 
-        pred_loss = 0
-        eq_odds_loss = 0
         running_loss = 0
         total = 0
         correct = 0
@@ -84,6 +62,8 @@ def expected_accuracy(labels, predictions):
     labels_b = labels.reshape(-1,)
     prediction_accuracy = np.sum(labels_b==predictions_b)/len(labels)
     return prediction_accuracy*100
+    # error_rate = np.linalg.norm((labels_b-predictions))*np.linalg.norm((labels_b-predictions))
+    # return error_rate/len(labels)
 
 
 def calibration_score(labels, predictions, lmbda=5):
@@ -94,7 +74,6 @@ def calibration_score(labels, predictions, lmbda=5):
         if len(S_v)==0:
             continue
         else:
-            prediction_scores.append(abs(np.mean(predictions[S_v])-np.mean(labels[S_v])))
-        # prediction_scores.append(abs(np.mean(predictions[S_v])-(v+(1./(2*lmbda)))))
+            prediction_scores.append(abs(np.mean(predictions[S_v] - labels[S_v])))
     prediction_scores = np.array(prediction_scores)
     return np.mean(prediction_scores)
