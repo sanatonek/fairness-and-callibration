@@ -65,63 +65,67 @@ def main(args):
               %(expected_accuracy(y.numpy(), predictions.detach().numpy()) , expected_accuracy(y.numpy(), predictions_reg.detach().numpy()),
               expected_accuracy(y.numpy(), calibrated_predictions) , expected_accuracy(y.numpy(), multicalibrated_predictions)))
         # Find the two subset of the sensitive feature
-        sensitive_set = [i for i in range(len(x)) if x.numpy()[i, sensitive_feature] == 1]
-        # sensitive_set = list(set(range(len(x))) - set(sensitive_set))
-        if len(sensitive_set)==0:
-            continue
+        sensitive_set_orig = [i for i in range(len(x)) if x.numpy()[i, sensitive_feature] == 1]
+        sensitive_set_not = list(set(range(len(x))) - set(sensitive_set_orig))
 
-        y_s = y.numpy()[sensitive_set]
-        prediction_s = predictions.detach().numpy()[sensitive_set]
-        predictions_reg_s = predictions_reg.detach().numpy()[sensitive_set]
-        calibrated_predictions_s = calibrated_predictions[sensitive_set]
-        multicalibrated_predictions_s = multicalibrated_predictions[sensitive_set]
+        for set_ind,sensitive_set in enumerate([sensitive_set_orig, sensitive_set_not]):
+            print('*********************** Printing results for %s ***********************'
+                  %(['feature set', 'complement of the feature set'][set_ind]))
+            if len(sensitive_set)==0:
+                continue
 
-        ## TPR, TNR
-        # ground truth
-        tpr = 0 if np.sum(y_s)==0 else np.dot((prediction_s), (y_s))/ np.sum(y_s)
-        tnr = 0 if np.sum(1-y_s)==0 else  np.dot((prediction_s), (1 - y_s))/ np.sum(1 - y_s)
-        # reg
-        tpr_reg = 0 if np.sum(y_s)==0 else  np.dot((predictions_reg_s), (y_s))/np.sum(y_s)
-        tnr_reg = 0 if np.sum(1-y_s)==0 else  np.dot((predictions_reg_s), (1 - y_s))/ np.sum(1 - y_s)
-        # calib
-        tpr_reg_calib = 0 if np.sum(y_s)==0 else  np.dot(calibrated_predictions_s, y_s)/ np.sum(y_s)
-        tnr_reg_calib = 0 if np.sum(1-y_s)==0 else  np.dot(calibrated_predictions_s, (1 - y_s))/ np.sum(1 - y_s)
-        # multicalib
-        tpr_reg_multicalib = 0 if np.sum(y_s)==0 else  np.dot(multicalibrated_predictions_s, y_s)/ np.sum(y_s)
-        tnr_reg_multicalib = 0 if np.sum(1-y_s)==0 else  np.dot(multicalibrated_predictions_s, (1 - y_s))/ np.sum(1 - y_s)
-        print('\n********** TPR **********')
-        print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
-              %(tpr, tpr_reg, tpr_reg_calib, tpr_reg_multicalib))
-        print('********** TNR **********')
-        print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
-              %(tnr, tnr_reg, tnr_reg_calib, tnr_reg_multicalib))
+            y_s = y.numpy()[sensitive_set]
+            prediction_s = predictions.detach().numpy()[sensitive_set]
+            predictions_reg_s = predictions_reg.detach().numpy()[sensitive_set]
+            calibrated_predictions_s = calibrated_predictions[sensitive_set]
+            multicalibrated_predictions_s = multicalibrated_predictions[sensitive_set]
 
-        ##  Accuracies
-        # Ground truth
-        accuracy = expected_accuracy(y_s, prediction_s)
-        # reg
-        accuracy_reg = expected_accuracy(y_s, predictions_reg_s)
-        # calib
-        accuracy_calib = expected_accuracy(y_s, calibrated_predictions_s)
-        # multicalib
-        accuracy_multicalib = expected_accuracy(y_s, multicalibrated_predictions_s)
-        print('********** Accuracy **********')
-        print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
-              %(accuracy, accuracy_reg, accuracy_calib, accuracy_multicalib))
+            ## TPR, TNR
+            # ground truth
+            tpr = 0 if np.sum(y_s)==0 else np.dot((prediction_s), (y_s))/ np.sum(y_s)
+            tnr = 0 if np.sum(1-y_s)==0 else  np.dot((prediction_s), (1 - y_s))/ np.sum(1 - y_s)
+            # reg
+            tpr_reg = 0 if np.sum(y_s)==0 else  np.dot((predictions_reg_s), (y_s))/np.sum(y_s)
+            tnr_reg = 0 if np.sum(1-y_s)==0 else  np.dot((predictions_reg_s), (1 - y_s))/ np.sum(1 - y_s)
+            # calib
+            tpr_reg_calib = 0 if np.sum(y_s)==0 else  np.dot(calibrated_predictions_s, y_s)/ np.sum(y_s)
+            tnr_reg_calib = 0 if np.sum(1-y_s)==0 else  np.dot(calibrated_predictions_s, (1 - y_s))/ np.sum(1 - y_s)
+            # multicalib
+            tpr_reg_multicalib = 0 if np.sum(y_s)==0 else  np.dot(multicalibrated_predictions_s, y_s)/ np.sum(y_s)
+            tnr_reg_multicalib = 0 if np.sum(1-y_s)==0 else  np.dot(multicalibrated_predictions_s, (1 - y_s))/ np.sum(1 - y_s)
+            print('\n********** TPR **********')
+            print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
+                  %(tpr, tpr_reg, tpr_reg_calib, tpr_reg_multicalib))
+            print('********** TNR **********')
+            print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
+                  %(tnr, tnr_reg, tnr_reg_calib, tnr_reg_multicalib))
+
+            ##  Accuracies
+            # Ground truth
+            accuracy = expected_accuracy(y_s, prediction_s)
+            # reg
+            accuracy_reg = expected_accuracy(y_s, predictions_reg_s)
+            # calib
+            accuracy_calib = expected_accuracy(y_s, calibrated_predictions_s)
+            # multicalib
+            accuracy_multicalib = expected_accuracy(y_s, multicalibrated_predictions_s)
+            print('********** Accuracy **********')
+            print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
+                  %(accuracy, accuracy_reg, accuracy_calib, accuracy_multicalib))
 
 
-        ##  Calibration
-        # Ground truth
-        calibration = calibration_score(y_s, prediction_s, args.lmbda)
-        # reg
-        calibration_reg = calibration_score(y_s, predictions_reg_s, args.lmbda)
-        # calib
-        calibration_calib = calibration_score(y_s, calibrated_predictions_s, args.lmbda)
-        # multicalib
-        calibration_multicalib = calibration_score(y_s, multicalibrated_predictions_s, args.lmbda)
-        print('********** Calibration **********')
-        print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
-              %(calibration, calibration_reg, calibration_calib, calibration_multicalib))
+            ##  Calibration
+            # Ground truth
+            calibration = calibration_score(y_s, prediction_s, args.lmbda)
+            # reg
+            calibration_reg = calibration_score(y_s, predictions_reg_s, args.lmbda)
+            # calib
+            calibration_calib = calibration_score(y_s, calibrated_predictions_s, args.lmbda)
+            # multicalib
+            calibration_multicalib = calibration_score(y_s, multicalibrated_predictions_s, args.lmbda)
+            print('********** Calibration **********')
+            print('Ground truth: %2f\t Regularized: %2f\t Calibration %2f\t Multicalibration %2f\t'
+                  %(calibration, calibration_reg, calibration_calib, calibration_multicalib))
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Use multicalibration to report clibrated results of a model')
