@@ -21,21 +21,17 @@ def calibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
         # Find the two subset of the sensitive feature
         sensitive_set = [i for i in range(len(data)) if data[i, sensitive_feature] == 1]
         sensitive_set_not = list(set(range(len(data))) - set(sensitive_set))
-        # print('Samples in each subgroup: ', len(sensitive_set), len(sensitive_set_not))
         for S in [sensitive_set, sensitive_set_not]:
-            # E_s = np.mean(lables[S])
             change = 1
             while change > 0:
                 change = 0
                 for v in v_range:
                     S_v = [i for i in S if calibrated_predictions[i]<v+(1./lmbda) and calibrated_predictions[i]>=v]
-                    # print('Cheking bin %.1f of size s_v: '%v, len(S_v))
                     if len(S_v)< alpha*lmbda*len(S):
                         continue
                     E_predictions = np.mean(calibrated_predictions[S_v])    # V_hat
                     r = oracle(S_v, E_predictions, alpha/4, labels)
                     if r!=100:
-                        # print('Update value: ', r)
                         calibrated_predictions[S_v] = calibrated_predictions[S_v] + (r-E_predictions)
 
                     if (calibrated_predictions[S_v]<0).any() or (calibrated_predictions[S_v]>1).any():
@@ -43,6 +39,7 @@ def calibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
                     if set(S_v)!=set([i for i in S if calibrated_predictions[i] < v + (1. / lmbda) and calibrated_predictions[i] >= v]):
                         change += 1
     return calibrated_predictions
+
 
 def multicalibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
     # calibrated_predictions = predictions.copy()
@@ -57,7 +54,7 @@ def multicalibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
         for sets in multicalibrate_sets:
             set_not = list(set(range(len(data))) - set(sets))
             for S in [sets, set_not]:
-                print(data.shape)
+                # print(data.shape)
                 #if len(S)==0: # sk-debug
                 if len(S)<leaf_node_crit:
                     continue
@@ -67,10 +64,8 @@ def multicalibrate(data, labels, predictions, sensitive_features, alpha, lmbda):
                         continue
                     # print(alpha*lmbda*len(S), "%%%%", len(S_v))
                     E_predictions = np.mean(calibrated_predictions[S_v])    # V_hat
-                    print(E_predictions, np.mean(labels[S_v]))
                     r = oracle(S_v, E_predictions, alpha/4, labels)
                     if r!=100:
-                        print('Update value: ', r)
                         calibrated_predictions[S_v] = calibrated_predictions[S_v] + (r-E_predictions)
                         change += 1
 
@@ -98,21 +93,6 @@ def normalize(x):
         return x/min(x)
     else:
         return (x-min(x))/(max(x)-min(x))
-
-
-# def data_matches_features(data, selected_sensitives, all_sensitives): #input data is a single row in real data
-#     is_sensitive_required = dict()
-#     for sensitive_feature in all_sensitives:
-#         is_sensitive_required[sensitive_feature] = 0
-#     for required_sensitive_feature in selected_sensitives:
-#         is_sensitive_required[required_sensitive_feature] = 1
-#
-#     for i in range(len(data)):
-#         if i in is_sensitive_required:
-#             if data[i] != is_sensitive_required[i]:
-#                 return False
-#
-#     return True
 
 
 def all_subsets(data, sensitive_features):# all possible subsets of data with all 2^x values of sensitive feature set

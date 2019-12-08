@@ -58,12 +58,12 @@ def train_predictor(args, model, train_loader, epochs, lmbda, lr=1e-4, momentum=
 
 
 def expected_accuracy(labels, predictions):
-    predictions_b = (predictions>0.5).astype(int)
+    # predictions_b = (predictions>0.5).astype(int)
     labels_b = labels.reshape(-1,)
-    prediction_accuracy = np.sum(labels_b==predictions_b)/len(labels)
-    return prediction_accuracy*100
-    # error_rate = np.linalg.norm((labels_b-predictions))*np.linalg.norm((labels_b-predictions))
-    # return error_rate/len(labels)
+    # prediction_accuracy = np.sum(labels_b==predictions_b)/len(labels)
+    # return prediction_accuracy*100
+    error_rate = np.linalg.norm((labels_b-predictions))*np.linalg.norm((labels_b-predictions))
+    return error_rate/len(labels)
 
 
 def calibration_score(labels, predictions, lmbda=5):

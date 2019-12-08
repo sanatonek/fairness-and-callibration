@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 sys.path.append('..')
 
 from multicalib.models import IncomeDataset, CreditDataset, RecidDataset, NNetPredictor
-from multicalib.utils import expected_accuracy, calibration_score, EqualizedOddsReg
+from multicalib.utils import expected_accuracy, calibration_score
 from multicalib.multicalibration import calibrate, multicalibrate
 
 
